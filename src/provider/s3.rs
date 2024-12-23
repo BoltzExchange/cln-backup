@@ -1,5 +1,5 @@
 use crate::provider::Provider;
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use log::info;
 use s3::creds::Credentials;
@@ -18,10 +18,8 @@ impl S3 {
         path: &str,
         access_key: &str,
         secret_key: &str,
-    ) -> anyhow::Result<Self> {
-        let creds = Credentials::new(Some(access_key), Some(secret_key), None, None, None)?;
-
-        info!("Using bucket {} at {}", bucket, endpoint);
+    ) -> Result<Self> {
+        info!("Using S3 bucket {} at {}", bucket, endpoint);
 
         let bucket = Bucket::new(
             bucket,
@@ -29,7 +27,7 @@ impl S3 {
                 endpoint: endpoint.to_string(),
                 region: "".to_string(),
             },
-            creds,
+            Credentials::new(Some(access_key), Some(secret_key), None, None, None)?,
         )?
         .with_path_style();
         if !bucket.exists().await? {
