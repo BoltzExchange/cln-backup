@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 build = "build.rs"
-repository = "https://github.com/BoltzExchange/backup"
+repository = "https://github.com/BoltzExchange/cln-backup"
 
 [profile.release]
 strip = true
