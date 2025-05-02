@@ -7,7 +7,7 @@ use tokio::task::JoinSet;
 pub mod s3;
 
 #[cfg(feature = "webdav")]
-pub mod webav;
+pub mod webdav;
 
 #[async_trait]
 pub trait Provider {

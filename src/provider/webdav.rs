@@ -11,7 +11,7 @@ pub struct WebDav {
 
 impl WebDav {
     pub fn new(endpoint: String, user: Option<String>, password: Option<String>) -> Result<WebDav> {
-        info!("Using WebDAV endpoint: {}", endpoint);
+        info!("Using WebDAV endpoint: {endpoint}");
 
         let mut auth = Auth::Anonymous;
         if let Some(user) = user {

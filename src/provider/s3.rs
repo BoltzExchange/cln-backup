@@ -19,7 +19,7 @@ impl S3 {
         access_key: &str,
         secret_key: &str,
     ) -> Result<Self> {
-        info!("Using S3 bucket {} at {}", bucket, endpoint);
+        info!("Using S3 bucket {bucket} at {endpoint}");
 
         let bucket = Bucket::new(
             bucket,
