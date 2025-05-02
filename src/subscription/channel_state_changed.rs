@@ -12,7 +12,7 @@ where
     C: Compression + Clone + Send + 'static,
 {
     if let Err(err) = plugin.state().backup.backup().await {
-        error!("Could not upload backup: {}", err);
+        error!("Could not upload backup: {err}");
     }
 
     Ok(())

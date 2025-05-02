@@ -1,13 +1,13 @@
 name: CI
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
   build:
     strategy:
       matrix:
-        platform: [ ubuntu-latest ]
-        rust-version: [ stable, nightly ]
+        platform: [ubuntu-latest]
+        rust-version: [stable, nightly]
 
     runs-on: ${{ matrix.platform }}
 
@@ -31,7 +31,7 @@ jobs:
         run: cargo fmt --check
 
       - name: Clippy
-        run: cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Unit tests
         run: cargo test

@@ -10,7 +10,7 @@ use std::sync::Arc;
 use crate::provider::s3::S3;
 
 #[cfg(feature = "webdav")]
-use crate::provider::webav::WebDav;
+use crate::provider::webdav::WebDav;
 
 mod backup;
 mod command;
@@ -75,14 +75,14 @@ async fn main() -> Result<()> {
     #[cfg(feature = "s3")]
     {
         if let Err(err) = setup_s3(&mut multi_provider, &plugin).await {
-            warn!("Setting up S3 failed: {}", err);
+            warn!("Setting up S3 failed: {err}");
         }
     }
 
     #[cfg(feature = "webdav")]
     {
         if let Err(err) = setup_webdav(&mut multi_provider, &plugin) {
-            warn!("Setting up WebDav failed: {}", err);
+            warn!("Setting up WebDav failed: {err}");
         }
     }
 
