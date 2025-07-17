@@ -1,9 +1,11 @@
 use crate::backup::Backup;
 use crate::compression::{Compression, Gzip};
+use crate::config::Config;
 use crate::provider::{MultiProvider, Provider};
 use anyhow::{anyhow, Result};
 use cln_plugin::{Builder, RpcMethodBuilder};
 use log::{info, warn};
+use std::path::Path;
 use std::sync::Arc;
 
 #[cfg(feature = "s3")]
@@ -15,7 +17,7 @@ use crate::provider::webdav::WebDav;
 mod backup;
 mod command;
 mod compression;
-mod options;
+mod config;
 mod provider;
 mod subscription;
 mod utils;
@@ -36,27 +38,7 @@ async fn main() -> Result<()> {
         "cln_plugin=trace,backup=trace,debug,info,warn,error",
     );
 
-    let mut plugin = Builder::new(tokio::io::stdin(), tokio::io::stdout());
-
-    #[cfg(feature = "s3")]
-    {
-        plugin = plugin
-            .option(options::S3_ENDPOINT)
-            .option(options::S3_BUCKET)
-            .option(options::S3_PATH)
-            .option(options::S3_ACCESS_KEY)
-            .option(options::S3_SECRET_KEY);
-    }
-
-    #[cfg(feature = "webdav")]
-    {
-        plugin = plugin
-            .option(options::WEBDAV_ENDPOINT)
-            .option(options::WEBDAV_USER)
-            .option(options::WEBDAV_PASSWORD);
-    }
-
-    let plugin = match plugin
+    let plugin = match Builder::new(tokio::io::stdin(), tokio::io::stdout())
         .dynamic()
         .subscribe("channel_state_changed", subscription::channel_state_changed)
         .rpcmethod_from_builder(
@@ -70,19 +52,28 @@ async fn main() -> Result<()> {
         None => return Err(anyhow!("could not build plugin")),
     };
 
+    let config_path = Path::new(&plugin.configuration().lightning_dir).join("backup.toml");
+    let config = Config::load(&config_path)?;
+
     let mut multi_provider = MultiProvider::new();
 
     #[cfg(feature = "s3")]
     {
-        if let Err(err) = setup_s3(&mut multi_provider, &plugin).await {
-            warn!("Setting up S3 failed: {err}");
+        if let Some(s3_configs) = config.s3 {
+            for s3_config in s3_configs {
+                if let Err(err) = setup_s3(&mut multi_provider, &s3_config).await {
+                    warn!("Setting up S3 failed: {err}");
+                }
+            }
         }
     }
 
     #[cfg(feature = "webdav")]
     {
-        if let Err(err) = setup_webdav(&mut multi_provider, &plugin) {
-            warn!("Setting up WebDav failed: {err}");
+        if let Some(webdav_config) = config.webdav {
+            if let Err(err) = setup_webdav(&mut multi_provider, &webdav_config) {
+                warn!("Setting up WebDav failed: {err}");
+            }
         }
     }
 
@@ -117,42 +108,28 @@ async fn main() -> Result<()> {
 }
 
 #[cfg(feature = "s3")]
-async fn setup_s3(
-    m: &mut MultiProvider,
-    plugin: &cln_plugin::ConfiguredPlugin<
-        State<MultiProvider, Gzip>,
-        tokio::io::Stdin,
-        tokio::io::Stdout,
-    >,
-) -> Result<()> {
-    let endpoint = options::get_option("S3 endpoint", plugin.option(&options::S3_ENDPOINT))?;
-    let bucket = options::get_option("S3 bucket", plugin.option(&options::S3_BUCKET))?;
-    let path = plugin.option(&options::S3_PATH)?;
-    let access_key = options::get_option("S3 access key", plugin.option(&options::S3_ACCESS_KEY))?;
-    let secret_key = options::get_option("S3 secret key", plugin.option(&options::S3_SECRET_KEY))?;
-
+async fn setup_s3(m: &mut MultiProvider, config: &crate::config::S3Config) -> Result<()> {
     m.add(Arc::new(
-        S3::new(&endpoint, &bucket, &path, &access_key, &secret_key).await?,
+        S3::new(
+            &config.endpoint,
+            &config.bucket,
+            config.path.as_deref().unwrap_or(""),
+            &config.access_key,
+            &config.secret_key,
+        )
+        .await?,
     ));
 
     Ok(())
 }
 
 #[cfg(feature = "webdav")]
-fn setup_webdav(
-    m: &mut MultiProvider,
-    plugin: &cln_plugin::ConfiguredPlugin<
-        State<MultiProvider, Gzip>,
-        tokio::io::Stdin,
-        tokio::io::Stdout,
-    >,
-) -> Result<()> {
-    let endpoint =
-        options::get_option("WebDAV endpoint", plugin.option(&options::WEBDAV_ENDPOINT))?;
-    let user = plugin.option(&options::WEBDAV_USER)?;
-    let password = plugin.option(&options::WEBDAV_PASSWORD)?;
-
-    m.add(Arc::new(WebDav::new(endpoint, user, password)?));
+fn setup_webdav(m: &mut MultiProvider, config: &crate::config::WebDavConfig) -> Result<()> {
+    m.add(Arc::new(WebDav::new(
+        config.endpoint.clone(),
+        config.user.clone(),
+        config.password.clone(),
+    )?));
 
     Ok(())
 }
