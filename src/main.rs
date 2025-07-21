@@ -66,7 +66,13 @@ async fn main() -> Result<()> {
     } else {
         Path::new(&plugin.configuration().lightning_dir).join(config_file)
     };
-    let config = Config::load(&config_path)?;
+    let config = Config::load(&config_path).map_err(|e| {
+        anyhow!(
+            "Failed to load config file {}: {}",
+            config_path.display(),
+            e
+        )
+    })?;
 
     let mut multi_provider = MultiProvider::new();
 
