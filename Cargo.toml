@@ -36,7 +36,6 @@ tokio = { version = "1.44.2", features = [
     "sync",
     "rt",
 ] }
-openssl = { version = "0.10.73", features = ["vendored"] }
 toml = "0.9.2"
 
 [build-dependencies]

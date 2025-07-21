@@ -3,7 +3,7 @@ use crate::compression::{Compression, Gzip};
 use crate::config::Config;
 use crate::provider::{MultiProvider, Provider};
 use anyhow::{anyhow, Result};
-use cln_plugin::{Builder, RpcMethodBuilder};
+use cln_plugin::{options, Builder, RpcMethodBuilder};
 use log::{info, warn};
 use std::path::Path;
 use std::sync::Arc;
@@ -21,6 +21,13 @@ mod config;
 mod provider;
 mod subscription;
 mod utils;
+
+const BACKUP_CONFIG_PATH: options::DefaultStringConfigOption =
+    options::ConfigOption::new_str_with_default(
+        "backup-config-path",
+        "backup.toml",
+        "Path to the backup configuration file (absolute or relative to lightning directory)",
+    );
 
 #[derive(Clone)]
 struct State<B, C>
@@ -40,6 +47,7 @@ async fn main() -> Result<()> {
 
     let plugin = match Builder::new(tokio::io::stdin(), tokio::io::stdout())
         .dynamic()
+        .option(BACKUP_CONFIG_PATH)
         .subscribe("channel_state_changed", subscription::channel_state_changed)
         .rpcmethod_from_builder(
             RpcMethodBuilder::new("staticbackup-upload", command::upload)
@@ -52,7 +60,12 @@ async fn main() -> Result<()> {
         None => return Err(anyhow!("could not build plugin")),
     };
 
-    let config_path = Path::new(&plugin.configuration().lightning_dir).join("backup.toml");
+    let config_file = plugin.option(&BACKUP_CONFIG_PATH)?;
+    let config_path = if Path::new(&config_file).is_absolute() {
+        Path::new(&config_file).to_path_buf()
+    } else {
+        Path::new(&plugin.configuration().lightning_dir).join(config_file)
+    };
     let config = Config::load(&config_path)?;
 
     let mut multi_provider = MultiProvider::new();
