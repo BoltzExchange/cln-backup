@@ -36,6 +36,7 @@ tokio = { version = "1.44.2", features = [
     "sync",
     "rt",
 ] }
+toml = "0.9.2"
 
 [build-dependencies]
 built = { version = "0.8.0", features = ["git2"] }

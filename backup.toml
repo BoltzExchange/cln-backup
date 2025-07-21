@@ -1,0 +1,18 @@
+[[s3]]
+endpoint = "your-s3-endpoint-1"
+bucket = "your-s3-bucket-1"
+# path = "your/s3/path-1" # optional
+access_key = "your-s3-access-key-1"
+secret_key = "your-s3-secret-key-1"
+
+[[s3]]
+endpoint = "your-s3-endpoint-2"
+bucket = "your-s3-bucket-2"
+# path = "your/s3/path-2" # optional
+access_key = "your-s3-access-key-2"
+secret_key = "your-s3-secret-key-2"
+
+[webdav]
+endpoint = "your-webdav-endpoint"
+# user = "your-webdav-user" # optional
+# password = "your-webdav-password" # optional

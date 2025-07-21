@@ -4,6 +4,8 @@ A CLN plugin that uploads the latest SCB to remote locations.
 Currently, it supports S3-compatible APIs and WebDAV.
 The plugin will upload the SCB on startup and when a channel is opened or closed.
 
+Configuration is done through the `backup.toml` file in the lightning directory. This path can be overridden with the `backup-config-path` CLN config option.
+
 ## Installation
 
 Compiling the plugin requires Rust to be installed.
