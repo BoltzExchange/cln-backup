@@ -10,6 +10,8 @@ Configuration is done through the `backup.toml` file in the lightning directory.
 
 Compiling the plugin requires Rust to be installed.
 
+Alternatively, you can use `make docker-build` to build a release binary in a Docker container (output in `./build/` directory).
+
 By default, the plugin is compiled with S3 and WebDAV support:
 
 ```bash
