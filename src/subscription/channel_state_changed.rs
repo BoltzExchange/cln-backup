@@ -1,6 +1,6 @@
+use crate::State;
 use crate::compression::Compression;
 use crate::provider::Provider;
-use crate::State;
 use anyhow::Result;
 use cln_plugin::Plugin;
 use log::error;
