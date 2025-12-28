@@ -12,13 +12,13 @@ pub struct S3 {
 }
 
 impl S3 {
-    pub async fn new(config: &crate::config::S3Config) -> Result<Self> {
+    pub async fn new(config: crate::config::S3Config) -> Result<Self> {
         info!("Using S3 bucket {} at {}", config.bucket, config.endpoint);
 
         let bucket = Bucket::new(
             &config.bucket,
             Region::Custom {
-                endpoint: config.endpoint.to_string(),
+                endpoint: config.endpoint,
                 region: config.region.as_deref().unwrap_or("").to_string(),
             },
             Credentials::new(

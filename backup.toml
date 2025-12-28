@@ -14,7 +14,12 @@ bucket = "your-s3-bucket-2"
 access_key = "your-s3-access-key-2"
 secret_key = "your-s3-secret-key-2"
 
-[webdav]
+[[webdav]]
 endpoint = "your-webdav-endpoint"
 # user = "your-webdav-user" # optional
 # password = "your-webdav-password" # optional
+
+[[webdav]]
+endpoint = "your-webdav-endpoint-2"
+# user = "your-webdav-user-2" # optional
+# password = "your-webdav-password-2" # optional

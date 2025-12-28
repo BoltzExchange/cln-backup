@@ -10,18 +10,26 @@ pub struct WebDav {
 }
 
 impl WebDav {
-    pub fn new(endpoint: String, user: Option<String>, password: Option<String>) -> Result<WebDav> {
-        info!("Using WebDAV endpoint: {endpoint}");
+    pub fn new(config: crate::config::WebDavConfig) -> Result<WebDav> {
+        info!("Using WebDAV endpoint: {}", config.endpoint);
 
-        let mut auth = Auth::Anonymous;
-        if let Some(user) = user
-            && let Some(password) = password
-        {
-            auth = Auth::Basic(user, password);
-        }
+        let auth = match (config.user, config.password) {
+            (Some(user), Some(password)) => Auth::Basic(user, password),
+            (None, None) => Auth::Anonymous,
+            (Some(_), None) => {
+                return Err(anyhow::anyhow!(
+                    "WebDAV user provided but password is missing"
+                ));
+            }
+            (None, Some(_)) => {
+                return Err(anyhow::anyhow!(
+                    "WebDAV password provided but user is missing"
+                ));
+            }
+        };
 
         let client = ClientBuilder::new()
-            .set_host(endpoint)
+            .set_host(config.endpoint)
             .set_auth(auth)
             .build()?;
 
@@ -32,7 +40,7 @@ impl WebDav {
 #[async_trait]
 impl Provider for WebDav {
     async fn put(&self, path: &str, data: &[u8]) -> Result<()> {
-        self.client.put(path, Vec::from(data)).await?;
+        self.client.put(path, data.to_vec()).await?;
         Ok(())
     }
 }

@@ -1,7 +1,6 @@
-use anyhow::anyhow;
 use async_trait::async_trait;
+use futures::future;
 use std::sync::Arc;
-use tokio::task::JoinSet;
 
 #[cfg(feature = "s3")]
 pub mod s3;
@@ -38,21 +37,7 @@ impl MultiProvider {
 #[async_trait]
 impl Provider for MultiProvider {
     async fn put(&self, path: &str, data: &[u8]) -> anyhow::Result<()> {
-        let mut set = JoinSet::new();
-
-        for p in &self.providers {
-            let p = p.clone();
-            let path = path.to_owned();
-            let data = data.to_owned();
-
-            set.spawn(async move { p.put(&path, &data).await });
-        }
-
-        for res in set.join_all().await.iter() {
-            if let Err(err) = res {
-                return Err(anyhow!("{}", err));
-            }
-        }
+        future::try_join_all(self.providers.iter().map(|p| p.put(path, data))).await?;
 
         Ok(())
     }

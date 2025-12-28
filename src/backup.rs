@@ -37,9 +37,7 @@ where
             Self::get_time(),
             self.compression.file_suffix()
         );
-        let data = self
-            .compression
-            .compress(serde_json::to_string(&backup)?.as_bytes())?;
+        let data = self.compression.compress(&serde_json::to_vec(&backup)?)?;
 
         self.provider.lock().await.put(path.as_str(), &data).await?;
 

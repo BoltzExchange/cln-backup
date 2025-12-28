@@ -26,7 +26,7 @@ pub struct Config {
     #[cfg(feature = "s3")]
     pub s3: Option<Vec<S3Config>>,
     #[cfg(feature = "webdav")]
-    pub webdav: Option<WebDavConfig>,
+    pub webdav: Option<Vec<WebDavConfig>>,
 }
 
 impl Config {

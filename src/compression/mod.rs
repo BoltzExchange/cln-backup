@@ -3,16 +3,22 @@ use flate2::write::GzEncoder;
 use std::io::Write;
 
 pub trait Compression {
-    fn file_suffix(&self) -> String;
+    fn file_suffix(&self) -> &'static str;
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>>;
 }
 
 #[derive(Clone)]
 pub struct Gzip {}
 
+impl Gzip {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 impl Compression for Gzip {
-    fn file_suffix(&self) -> String {
-        "gz".to_string()
+    fn file_suffix(&self) -> &'static str {
+        "gz"
     }
 
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {

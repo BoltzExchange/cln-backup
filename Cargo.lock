@@ -124,6 +124,7 @@ dependencies = [
  "cln-plugin",
  "cln-rpc",
  "flate2",
+ "futures",
  "log",
  "reqwest_dav",
  "rust-s3",
