@@ -130,16 +130,7 @@ async fn main() -> Result<()> {
 
 #[cfg(feature = "s3")]
 async fn setup_s3(m: &mut MultiProvider, config: &crate::config::S3Config) -> Result<()> {
-    m.add(Arc::new(
-        S3::new(
-            &config.endpoint,
-            &config.bucket,
-            config.path.as_deref().unwrap_or(""),
-            &config.access_key,
-            &config.secret_key,
-        )
-        .await?,
-    ));
+    m.add(Arc::new(S3::new(config).await?));
 
     Ok(())
 }

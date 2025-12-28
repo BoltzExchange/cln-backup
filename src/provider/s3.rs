@@ -12,22 +12,22 @@ pub struct S3 {
 }
 
 impl S3 {
-    pub async fn new(
-        endpoint: &str,
-        bucket: &str,
-        path: &str,
-        access_key: &str,
-        secret_key: &str,
-    ) -> Result<Self> {
-        info!("Using S3 bucket {bucket} at {endpoint}");
+    pub async fn new(config: &crate::config::S3Config) -> Result<Self> {
+        info!("Using S3 bucket {} at {}", config.bucket, config.endpoint);
 
         let bucket = Bucket::new(
-            bucket,
+            &config.bucket,
             Region::Custom {
-                endpoint: endpoint.to_string(),
-                region: "".to_string(),
+                endpoint: config.endpoint.to_string(),
+                region: config.region.as_deref().unwrap_or("").to_string(),
             },
-            Credentials::new(Some(access_key), Some(secret_key), None, None, None)?,
+            Credentials::new(
+                Some(&config.access_key),
+                Some(&config.secret_key),
+                None,
+                None,
+                None,
+            )?,
         )?
         .with_path_style();
         if !bucket.exists().await? {
@@ -36,10 +36,11 @@ impl S3 {
 
         Ok(Self {
             bucket,
-            path: path
-                .to_string()
-                .strip_suffix("/")
-                .unwrap_or(path)
+            path: config
+                .path
+                .as_deref()
+                .unwrap_or("")
+                .trim_end_matches('/')
                 .to_string(),
         })
     }

@@ -6,6 +6,7 @@ use std::path::PathBuf;
 #[derive(Clone, Debug, Deserialize)]
 pub struct S3Config {
     pub endpoint: String,
+    pub region: Option<String>,
     pub bucket: String,
     pub path: Option<String>,
     pub access_key: String,
