@@ -1,5 +1,5 @@
 use crate::backup::Backup;
-use crate::compression::{Compression, Gzip};
+use crate::compression::{Compression, create_compression};
 use crate::config::Config;
 use crate::provider::{MultiProvider, Provider};
 use anyhow::{Result, anyhow};
@@ -7,6 +7,9 @@ use cln_plugin::{Builder, RpcMethodBuilder, options};
 use log::{info, warn};
 use std::path::Path;
 use std::sync::Arc;
+
+#[cfg(not(any(feature = "s3", feature = "webdav")))]
+compile_error!("At least one of the following features must be enabled: s3, webdav");
 
 #[cfg(feature = "s3")]
 use crate::provider::s3::S3;
@@ -80,10 +83,11 @@ async fn main() -> Result<()> {
 
     #[cfg(feature = "s3")]
     {
-        if let Some(s3_configs) = config.s3 {
-            for s3_config in s3_configs {
-                if let Err(err) = setup_s3(&mut multi_provider, &s3_config).await {
-                    warn!("Setting up S3 failed: {err}");
+        if let Some(configs) = config.s3 {
+            for config in configs {
+                match S3::new(config).await {
+                    Ok(s3) => multi_provider.add(Arc::new(s3)),
+                    Err(e) => warn!("Setting up S3 failed: {e}"),
                 }
             }
         }
@@ -91,10 +95,13 @@ async fn main() -> Result<()> {
 
     #[cfg(feature = "webdav")]
     {
-        if let Some(webdav_config) = config.webdav
-            && let Err(err) = setup_webdav(&mut multi_provider, &webdav_config)
-        {
-            warn!("Setting up WebDav failed: {err}");
+        if let Some(configs) = config.webdav {
+            for config in configs {
+                match WebDav::new(config) {
+                    Ok(webdav) => multi_provider.add(Arc::new(webdav)),
+                    Err(e) => warn!("Setting up WebDav failed: {e}"),
+                }
+            }
         }
     }
 
@@ -102,7 +109,14 @@ async fn main() -> Result<()> {
         return Err(anyhow!("No providers configured"));
     }
 
-    let backup = Backup::new(multi_provider, Gzip {}, &plugin.configuration().rpc_file).await?;
+    let compression = create_compression(config.compression)?;
+
+    let backup = Backup::new(
+        multi_provider,
+        compression,
+        &plugin.configuration().rpc_file,
+    )
+    .await?;
 
     let plugin = plugin
         .start(State {
@@ -125,23 +139,5 @@ async fn main() -> Result<()> {
     plugin.join().await?;
 
     info!("Stopped plugin");
-    Ok(())
-}
-
-#[cfg(feature = "s3")]
-async fn setup_s3(m: &mut MultiProvider, config: &crate::config::S3Config) -> Result<()> {
-    m.add(Arc::new(S3::new(config).await?));
-
-    Ok(())
-}
-
-#[cfg(feature = "webdav")]
-fn setup_webdav(m: &mut MultiProvider, config: &crate::config::WebDavConfig) -> Result<()> {
-    m.add(Arc::new(WebDav::new(
-        config.endpoint.clone(),
-        config.user.clone(),
-        config.password.clone(),
-    )?));
-
     Ok(())
 }
