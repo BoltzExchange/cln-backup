@@ -1,5 +1,5 @@
 use crate::backup::Backup;
-use crate::compression::{Compression, Gzip};
+use crate::compression::{Compression, create_compression};
 use crate::config::Config;
 use crate::provider::{MultiProvider, Provider};
 use anyhow::{Result, anyhow};
@@ -7,6 +7,9 @@ use cln_plugin::{Builder, RpcMethodBuilder, options};
 use log::{info, warn};
 use std::path::Path;
 use std::sync::Arc;
+
+#[cfg(not(any(feature = "s3", feature = "webdav")))]
+compile_error!("At least one of the following features must be enabled: s3, webdav");
 
 #[cfg(feature = "s3")]
 use crate::provider::s3::S3;
@@ -106,9 +109,11 @@ async fn main() -> Result<()> {
         return Err(anyhow!("No providers configured"));
     }
 
+    let compression = create_compression(config.compression)?;
+
     let backup = Backup::new(
         multi_provider,
-        Gzip::new(),
+        compression,
         &plugin.configuration().rpc_file,
     )
     .await?;

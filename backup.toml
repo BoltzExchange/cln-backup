@@ -1,3 +1,7 @@
+# Compression algorithm to use: "gzip", "zstd", or "none"
+# Default: zstd
+compression = "zstd"
+
 [[s3]]
 endpoint = "your-s3-endpoint-1"
 # region = "your-s3-region-1" # optional
