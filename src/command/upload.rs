@@ -1,6 +1,6 @@
+use crate::State;
 use crate::compression::Compression;
 use crate::provider::Provider;
-use crate::State;
 use cln_plugin::Plugin;
 use serde::Serialize;
 use serde_json::Value;

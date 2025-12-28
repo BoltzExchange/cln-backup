@@ -2,8 +2,8 @@ use crate::backup::Backup;
 use crate::compression::{Compression, Gzip};
 use crate::config::Config;
 use crate::provider::{MultiProvider, Provider};
-use anyhow::{anyhow, Result};
-use cln_plugin::{options, Builder, RpcMethodBuilder};
+use anyhow::{Result, anyhow};
+use cln_plugin::{Builder, RpcMethodBuilder, options};
 use log::{info, warn};
 use std::path::Path;
 use std::sync::Arc;
@@ -40,10 +40,12 @@ where
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    std::env::set_var(
-        "CLN_PLUGIN_LOG",
-        "cln_plugin=trace,backup=trace,debug,info,warn,error",
-    );
+    unsafe {
+        std::env::set_var(
+            "CLN_PLUGIN_LOG",
+            "cln_plugin=trace,backup=trace,debug,info,warn,error",
+        )
+    };
 
     let plugin = match Builder::new(tokio::io::stdin(), tokio::io::stdout())
         .dynamic()
@@ -89,10 +91,10 @@ async fn main() -> Result<()> {
 
     #[cfg(feature = "webdav")]
     {
-        if let Some(webdav_config) = config.webdav {
-            if let Err(err) = setup_webdav(&mut multi_provider, &webdav_config) {
-                warn!("Setting up WebDav failed: {err}");
-            }
+        if let Some(webdav_config) = config.webdav
+            && let Err(err) = setup_webdav(&mut multi_provider, &webdav_config)
+        {
+            warn!("Setting up WebDav failed: {err}");
         }
     }
 
@@ -128,16 +130,7 @@ async fn main() -> Result<()> {
 
 #[cfg(feature = "s3")]
 async fn setup_s3(m: &mut MultiProvider, config: &crate::config::S3Config) -> Result<()> {
-    m.add(Arc::new(
-        S3::new(
-            &config.endpoint,
-            &config.bucket,
-            config.path.as_deref().unwrap_or(""),
-            &config.access_key,
-            &config.secret_key,
-        )
-        .await?,
-    ));
+    m.add(Arc::new(S3::new(config).await?));
 
     Ok(())
 }

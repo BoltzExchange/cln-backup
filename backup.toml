@@ -1,5 +1,6 @@
 [[s3]]
 endpoint = "your-s3-endpoint-1"
+# region = "your-s3-region-1" # optional
 bucket = "your-s3-bucket-1"
 # path = "your/s3/path-1" # optional
 access_key = "your-s3-access-key-1"
@@ -7,6 +8,7 @@ secret_key = "your-s3-secret-key-1"
 
 [[s3]]
 endpoint = "your-s3-endpoint-2"
+# region = "your-s3-region-2" # optional
 bucket = "your-s3-bucket-2"
 # path = "your/s3/path-2" # optional
 access_key = "your-s3-access-key-2"

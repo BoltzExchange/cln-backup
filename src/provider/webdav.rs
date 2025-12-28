@@ -14,10 +14,10 @@ impl WebDav {
         info!("Using WebDAV endpoint: {endpoint}");
 
         let mut auth = Auth::Anonymous;
-        if let Some(user) = user {
-            if let Some(password) = password {
-                auth = Auth::Basic(user, password);
-            }
+        if let Some(user) = user
+            && let Some(password) = password
+        {
+            auth = Auth::Basic(user, password);
         }
 
         let client = ClientBuilder::new()
